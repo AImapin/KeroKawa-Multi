@@ -47,7 +47,8 @@ def get_plc_data(port_target):
         pesan = s.recv(1024)
         pesan = pesan.decode('utf-8')
         pesan = pesan.replace('\r\n', '')
-        save_log(f'Receive message from PLC => {port_target}: {pesan}')
+        if pesan == 'OK':
+            get_plc_data(port_target)
         return pesan
     except:
         pesan = 'error'

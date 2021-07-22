@@ -11,6 +11,10 @@ dummy = cv2.imread("/home/jetsonmapinai/Documents/AI Visual Inspection/7000.png"
 demmy = cv2.rectangle(dummy, (0, 0), (1280, 1024), (0, 0, 0))
 
 
+def get_images():
+    return dummy
+
+
 class kamera():
     def __init__(self, ip_address='169.254.203.55'):
         info = pylon.DeviceInfo()

@@ -1,6 +1,7 @@
 from threads.processing import Processing
 from threads.imgcapture import CamCapture
 from utils.Utils import change_plc_data
+import time
 
 
 def camthr():
@@ -15,8 +16,9 @@ def procthr():
 
 if __name__ == '__main__':
     try:
-        camthr()
         procthr()
+        time.sleep(3)
+        camthr()
     except:
         change_plc_data('MR0', '0')
         change_plc_data('MR13', '0')

@@ -10,17 +10,10 @@ NG_dict = dict(
 def final_decision(bbox_list, NG_list, img_list):
     Final = [NG_dict]
     for i in range(len(NG_list)):  # pembagi section
-        # if not i==1:
-        # 	continue
-        # if i==4 or i == 5:
-        #	continue
-        sl = NG_list[i]  # 0
+        sl = NG_list[i]
         bl = bbox_list[i]
         il = img_list[i]
         ng_bagian = i + 1
-        # print(ng_bagian) #1
-        # slist1, ...
-        # print(len(sl)) #12
         for j in range(len(sl)):  # pembagi frame
             sli = sl[j]
             bli = bl[j]
@@ -63,19 +56,23 @@ def final_decision(bbox_list, NG_list, img_list):
                         bagian=ng_bagian)
                     Final.append(newNG)
 
-    # print(Final)
     list_type_NG = []
     list_pengikut_NG = []
     list_bagian_NG = []
     list_image_NG = []
     for it in Final:
-        if (it['nama'] == 'Kurokawa' and it['pengikut'] >= 3) or \
-                (it['Nama'] == 'Scratch' and it['pengikut'] >= 3) or \
-                (it['Nama'] == 'Keropos' and it['pengikut'] >= 3) or \
-                (it['Nama'] == 'Dakon' and it['pengikut'] >= 2):
+        if (it['Nama'] == 'Kurokawa' and it['pengikut'] >= 4) or \
+                (it['Nama'] == 'Scratch' and it['pengikut'] >= 5) or \
+                (it['Nama'] == 'Keropos' and it['pengikut'] >= 2) or \
+                (it['Nama'] == 'Dakon' and it['pengikut'] >= 2 and it['bagian'] != 4) or \
+                (it['Nama'] == 'Dakon' and it['pengikut'] >= 3 and it['bagian'] == 4) or \
+                (it['Nama'] == 'Ketsuniku' and it['pengikut'] >= 4) or \
+                (it['Nama'] == 'Keropos_Casting' and it['pengikut'] >= 2) or \
+                (it['Nama'] == 'Step' and it['pengikut'] >= 2) or \
+                (it['Nama'] == 'PartingLine' and it['pengikut'] >= 2) or \
+                (it['Nama'] == 'Karat' and it['pengikut'] >= 3):
             list_type_NG.append(it['Nama'])
             list_pengikut_NG.append(it['pengikut'])
             list_bagian_NG.append(it['bagian'])
             list_image_NG.append(it['img'])
-
     return list_type_NG, list_pengikut_NG, list_bagian_NG, list_image_NG

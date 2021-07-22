@@ -16,6 +16,7 @@ MR301 = '0'
 B204 = '0'
 counter = 0
 
+
 def terimaTemp():
     pesan = s.recv(1024).decode('utf-8')
     pesan = pesan.replace('\r', '')

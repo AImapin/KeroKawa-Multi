@@ -4,7 +4,7 @@ import tensorflow as tf
 import cv2
 
 IMAGE_PATH = '/home/jetsonmapinai/Documents/AI Visual Inspection/dummy.png'
-PB_PATH = '/home/jetsonmapinai/Documents/AI Visual Inspection/models/tf1_inference/model_trt.pb'
+PB_PATH = '/home/jetsonmapinai/Documents/tf_trt_models/data/faster_rcnn_inception_v2_kdsk_feb5_50_trt.pb'
 
 """Load the TRT graph from the pre-build pb file."""
 
@@ -17,6 +17,7 @@ with tf.Graph().as_default() as trt_graph:
 
 tf_config = tf.compat.v1.ConfigProto()
 tf_config.gpu_options.allow_growth = True
+tf_config.gpu_options.per_process_gpu_memory_fraction = 0.3
 tf_sess = tf.compat.v1.Session(config=tf_config, graph=trt_graph)
 
 tf_input = tf_sess.graph.get_tensor_by_name('image_tensor:0')
@@ -28,7 +29,7 @@ tf_num_detections = tf_sess.graph.get_tensor_by_name('num_detections:0')
 
 def do_detect(image):
     class_name = ["BG", "Keropos", "Kurokawa", "Dakon", "Scratch", "Hole", "D78", "Scratch_OK", "Water_Droplet",
-                  "Ketsuniku", "Keropos_Casting", "Step", "PartingLine"]
+                  "Ketsuniku", "Keropos_Casting", "Step", "Parting_Line"]
     scores, boxes, classes, num_detections = tf_sess.run([tf_scores, tf_boxes, tf_classes, tf_num_detections],
                                                          feed_dict={tf_input: image[None, ...]})
     ori = image.copy()
@@ -39,8 +40,9 @@ def do_detect(image):
     cls_det = []
     bbox = []
     for i in range(int(num_detections)):
-        if (scores[i] >= 0.1 and classes[i] == 1) or\
-                (scores[i] >= 0.3 and classes[i] != 5 and classes[i] != 6 and classes[i] != 7 and classes[i] != 8):
+        if (scores[i] >= 0.5 and classes[i] == 1) or\
+                (scores[i] >= 0.5 and classes[i] != 4 and classes[i] != 5 and classes[i] != 6 and classes[i] != 7 and classes[i] != 8) or \
+                (scores[i] >= 0.98 and classes[i] == 4):
             box = boxes[i] * np.array([image.shape[0], image.shape[1], image.shape[0], image.shape[1]])
             image = cv2.rectangle(image, (int(box[1]), int(box[0])), (int(box[3]), int(box[2])), (0, 0, 255), 2)
             image = cv2.putText(image, '%s %.2f' % (class_name[int(classes[i])], scores[i]),
@@ -48,6 +50,11 @@ def do_detect(image):
             cls_det.append(class_name[int(classes[i])])
             bbox.append(box)
     return ori, image, cls_det, bbox
+
+
+def get_img():
+    img = cv2.imread(IMAGE_PATH)
+    return img
 
 
 def warmup():

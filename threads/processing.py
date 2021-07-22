@@ -1,14 +1,14 @@
 import threading
 from libraries import zmqimage
 import time
-from utils.Utils import change_plc_data, get_plc_data, save_log
+from utils.Utils import change_plc_data, save_log
 from inferences.decision import final_decision
 from inferences.decisiond78 import d78_decision
-from inferences.inference import do_detect, warmup
+from inferences.inference_onnx import do_detect, warmup
 
 
 AIO_IP_ADDRESS = "192.168.0.77"
-zmqi_img = zmqimage.ZmqImageShowServer(open_port="tcp://*:5679")
+zmqi_img = zmqimage.ZmqImageShowServer(open_port="tcp://*:5678")
 
 zmqo = zmqimage.ZmqConnect(connect_to=f"tcp://{AIO_IP_ADDRESS}:3445")  # master/GUI
 zmqo_aio_ng = zmqimage.ZmqConnect(connect_to=f"tcp://{AIO_IP_ADDRESS}:3435")
@@ -27,8 +27,7 @@ class Processing(threading.Thread):
         ilist4 = []; ilist5 = []; ilist6 = []
         i1 = 0
         i2 = 0
-        D78 = get_plc_data('MR1709')
-        D26 = get_plc_data('MR1509')
+        resetPLC = False
         while True:
             start = time.time()
             cam_pos1, img1 = zmqi_img.imreceive()
@@ -37,24 +36,30 @@ class Processing(threading.Thread):
             save_log(f'Receive images SUCCESS: {time.time() - start}')
             if cam_pos1[0] == '1':
                 i1 += 1
-                save_log(f'Processing type {cam_pos1[1]} rotation {i1}')
+                if resetPLC and i1 == 12:
+                    resetPLC = False
+                    save_log('Reset PLC')
+                    change_plc_data('MR13', '0')
+                    change_plc_data('MR14', '0')
+                save_log(f'Processing type {cam_pos1[1]} Sec1 rotation {i1}')
                 mainprocess(slist1, slist2, slist3, blist1, blist2, blist3, ilist1, ilist2, ilist3,
                             ["Sec1", "Sec2", "Sec3"], i1, img1, img2, img3)
             elif cam_pos1[0] == '2' and cam_pos1[1] == 'T1':
                 i2 += 1
-                save_log(f'Processing type {cam_pos1[1]} rotation {i1}')
+                save_log(f'Processing type {cam_pos1[1]} Sec2 rotation {i2}')
                 mainprocess2(slist4, slist5, blist4, blist5, ilist4, ilist5, ["Sec4", "Sec5"], i2, img1, img2, img3)
             elif cam_pos1[0] == '2' and not cam_pos1[1] == 'T1':
                 i2 += 1
-                save_log(f'Processing type {cam_pos1[1]} rotation {i1}')
+                save_log(f'Processing type {cam_pos1[1]} Sec2 rotation {i2}')
                 mainprocess(slist4, slist5, slist6, blist4, blist5, blist6, ilist4, ilist5, ilist6,
                             ["Sec4", "Sec5", "Sec6"], i2, img1, img2, img3)
             if cam_pos1[0] == 'Done':
+                resetPLC = True
                 save_log('Done processing one part')
                 i1 = 0
                 i2 = 0
                 zmqo.imsend("Done", img1)
-                if D26 == '1' or D78 == '1':
+                if cam_pos1[1] == 'D78':
                     save_log('Start validating data for type D26 / D78')
                     slist_all = [slist1, slist2, slist3, slist4, slist5, slist6]
                     blist_all = [blist1, blist2, blist3, blist4, blist5, blist6]
@@ -120,7 +125,7 @@ def mainprocess(listS1, listS2, listS3, listB1, listB2, listB3, listi1, listi2, 
     res1, box1, img1 = detection(Pic1, scs[0], n)
     res2, box2, img2 = detection(Pic2, scs[1], n)
     res3, box3, img3 = detection(Pic3, scs[2], n)
-    print(f'waktu detek: {time.time() - start}')
+    print(f'Detection time: {time.time() - start}')
     listS3.append(res3)
     listB3.append(box3)
     listS1.append(res1)
@@ -134,8 +139,10 @@ def mainprocess(listS1, listS2, listS3, listB1, listB2, listB3, listi1, listi2, 
 
 def mainprocess2(listS2, listS3, listB2, listB3, listi2, listi3, scs, n, Pic1, Pic2, Pic3):
     zmqo.imsend("3", Pic1)
+    start = time.time()
     res2, box2, img2 = detection(Pic2, scs[0], n)
     res3, box3, img3 = detection(Pic3, scs[1], n)
+    print(f'Detection time: {time.time() - start}')
     listS3.append(res3)
     listB3.append(box3)
     listS2.append(res2)
