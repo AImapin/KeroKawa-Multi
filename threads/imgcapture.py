@@ -28,7 +28,7 @@ class CamCapture(threading.Thread):
             cam_status = get_plc_data('MR15')
             if cam_status == '1':
                 if 0 <= COUNTER < 12:
-                    time.sleep(0.2)
+                    time.sleep(0.25)
                     cam1_img = basler1.ambilgambar()
                     cam2_img = basler2.ambilgambar()
                     cam3_img = basler3.ambilgambar()
@@ -48,7 +48,7 @@ class CamCapture(threading.Thread):
                         else:
                             part_type = 'D78'
                             msg = ['2', 'D78']
-                    time.sleep(0.2)
+                    time.sleep(0.25)
                     cam1_img = basler1.ambilgambar()
                     cam2_img = basler2.ambilgambar()
                     cam3_img = basler3.ambilgambar()
@@ -73,13 +73,8 @@ class CamCapture(threading.Thread):
                 else:
                     if get_plc_data('MR1502') == '1':
                         COUNTER = 0
-                    time.sleep(0.2)
+                    time.sleep(0.15)
             else:
                 if get_plc_data('MR1502') == '1':
                     COUNTER = 0
-                time.sleep(0.2)
-
-
-if __name__ == '__main__':
-    cam = CamCapture()
-    cam.start()
+                time.sleep(0.15)
